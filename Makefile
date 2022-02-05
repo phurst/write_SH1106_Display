@@ -3,6 +3,6 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := write-SH1106-Display
+PROJECT_NAME := write_SH1106_Display
 
 include $(IDF_PATH)/make/project.mk
