@@ -84,6 +84,32 @@ esp_err_t check_SH1106() {
   return ret;
 }
 
+esp_err_t sh1106_command(uint8_t commandByte, char *commandName) {
+  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (SH1106_I2C_ADDRESS << 1) | WRITE_BIT,
+                        ACK_CHECK_DIS);
+  i2c_master_write_byte(cmd, commandByte, ACK_CHECK_EN);
+  i2c_master_stop(cmd);
+  esp_err_t ret =
+      i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 50 / portTICK_RATE_MS);
+  i2c_cmd_link_delete(cmd);
+  if(ret == ESP_OK) {
+    ESP_LOGI(TAG, "COMMAND[%s] SUCCEEDED", commandName);
+  } else {
+   ESP_LOGI(TAG, "COMMAND[%s] FAILED !!!!!!!!!!!!!!!!!!!!!!!!!!", commandName);
+  }
+  return ret;
+}
+
+esp_err_t initialize_SH1106() {
+  esp_err_t ret = sh1106_command(SH1106_DISPLAYOFF, "SH1106_DISPLAYOFF");  // 0xAE
+  if(ret == ESP_OK) {
+
+  }
+  return ret;
+}
+
 esp_err_t check_and_report_SH1106() {
   esp_err_t ret = check_SH1106();
   xSemaphoreTake(print_mux, portMAX_DELAY);
@@ -105,15 +131,19 @@ void SH1106_task(void *arg) {
   int doContinue = 1;
   esp_err_t ret = check_and_report_SH1106();
   if (ret != ESP_OK) {
+    ESP_LOGI(TAG, "TASK[%s] check_and_report_SH1106 FAILED", task_name);
     doContinue = 0;
+  } else {
+    ret = initialize_SH1106();
+    if (ret != ESP_OK) {
+      ESP_LOGI(TAG, "TASK[%s] initialize_SH1106 FAILED", task_name);
+      doContinue = 0;
+    }
   }
   int iteration = 0;
   while (doContinue) {
     ESP_LOGI(TAG, "TASK[%s] iteration: %d", task_name, iteration++);
-    // esp_err_t ret = check_and_report_SH1106();
-    // if(ret != ESP_OK) {
-    //     break;
-    // }
+    // Iterative stuff here
     vTaskDelay(SH1106_CHECK_DELAY_MS / portTICK_RATE_MS);
   }
   ESP_LOGI(TAG, "TASK[%s] ENDED", task_name);
