@@ -101,8 +101,13 @@ esp_err_t sh1106_command(uint8_t commandByte, char *commandName) {
   return ret;
 }
 
+esp_err_t display_off() {
+  return sh1106_command(SH1106_DISPLAYOFF, "SH1106_DISPLAYOFF");  // 0xAE
+}
+
 esp_err_t initialize_SH1106() {
-  esp_err_t ret = sh1106_command(SH1106_DISPLAYOFF, "SH1106_DISPLAYOFF");  // 0xAE
+  // esp_err_t ret = sh1106_command(SH1106_DISPLAYOFF, "SH1106_DISPLAYOFF");  // 0xAE
+  esp_err_t ret = (*sh1106_command)(SH1106_DISPLAYOFF, "SH1106_DISPLAYOFF");
   if(ret == ESP_OK) {
 
   }
